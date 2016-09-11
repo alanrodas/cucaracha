@@ -1,13 +1,13 @@
 name:                cucaracha
 version:             0.1.0.0
-synopsis:            Initial project template from stack
+synopsis:            A programming language made in Haskell using Alex and Happy
 description:         Please see README.md
-homepage:            https://github.com/githubuser/cucaracha#readme
+homepage:            https://github.com/alanrodas/cucaracha#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Author name here
-maintainer:          example@example.com
-copyright:           2016 Author name here
+author:              Alan Rodas Bonjour
+maintainer:          alanrodas@gmail.com
+copyright:           2016 Alan Rodas Bonjour
 category:            Web
 build-type:          Simple
 extra-source-files:  src/Lexer.x, src/Parser.y
@@ -41,4 +41,4 @@ test-suite cucaracha-test
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/cucaracha
+  location: https://github.com/alanrodas/cucaracha
