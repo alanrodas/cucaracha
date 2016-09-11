@@ -1,0 +1,41 @@
+
+==================== FINAL INTERFACE ====================
+2016-09-11 04:29:13.99782 UTC
+
+interface cucar_FplgUcjuVAy8HMM9qW2uWS:ASTPrinter 7103
+  interface hash: 224e333f6449b40f44d83a40e8a1f8b4
+  ABI hash: 2eec04100eaec44852e2e1437004a8cb
+  export-list hash: 72192350e8462a40c343a5bbf397d1a3
+  orphan hash: 693e9af84d3dfcc71e640e005bdc5e2e
+  flag hash: 4c0a7b65a6dddbc4161c2e2bfabe3dc3
+  sig of: Nothing
+  used TH splices: False
+  where
+exports:
+  ASTPrinter.stringify
+module dependencies: Lexer Parser
+package dependencies: array-0.5.1.0@array_67iodizgJQIIxYVTp4emlA
+                      base-4.8.2.0 ghc-prim-0.4.0.0 integer-gmp-1.0.0.0
+orphans: base-4.8.2.0:GHC.Base base-4.8.2.0:GHC.Float
+family instance modules: base-4.8.2.0:Control.Applicative
+                         base-4.8.2.0:Data.Either base-4.8.2.0:Data.Monoid
+                         base-4.8.2.0:Data.Type.Equality base-4.8.2.0:GHC.Exts
+                         base-4.8.2.0:GHC.Generics
+import  -/  base-4.8.2.0:GHC.Base 1db77db5dae73d8c424c85b09fbadb89
+import  -/  base-4.8.2.0:Prelude 694dcaf039efe62df1c44834e2dbd2fb
+import  -/  Parser afdce5f6155e14de618d453520e71be0
+  exports: 189ddf46fa8fba387e3752d2aeabcb54
+  ProgramT 83a9f47f8b404e9431e9c0738f025602
+cff64cb39d0a92dbd5e79cdaa496385b
+  stringify :: Parser.ProgramT -> GHC.Base.String
+  {- Arity: 1, HasNoCafRefs, Strictness: <L,A>,
+     Unfolding: InlineRule (1, True, True)
+                (\ ds :: Parser.ProgramT -> GHC.Types.[] @ GHC.Types.Char) -}
+vectorised variables:
+vectorised tycons:
+vectorised reused tycons:
+parallel variables:
+parallel tycons:
+trusted: none
+require own pkg trusted: False
+

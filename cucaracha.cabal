@@ -1,0 +1,44 @@
+name:                cucaracha
+version:             0.1.0.0
+synopsis:            Initial project template from stack
+description:         Please see README.md
+homepage:            https://github.com/githubuser/cucaracha#readme
+license:             BSD3
+license-file:        LICENSE
+author:              Author name here
+maintainer:          example@example.com
+copyright:           2016 Author name here
+category:            Web
+build-type:          Simple
+extra-source-files:  src/Lexer.x, src/Parser.y
+cabal-version:       >=1.10
+
+library
+  hs-source-dirs:      src
+  build-depends:       base >= 4.7 && < 5
+                    ,  array
+  build-tools:         alex, happy
+  default-language:    Haskell2010
+  exposed-modules:     Lexer, Parser, ASTPrinter
+
+executable cucaracha-exe
+  hs-source-dirs:      app
+  main-is:             Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  build-depends:       base, array, cucaracha
+  build-tools:         alex, happy
+  default-language:    Haskell2010
+  exposed-modules:     Lexer, Parser, ASTPrinter
+
+test-suite cucaracha-test
+  type:                exitcode-stdio-1.0
+  hs-source-dirs:      test
+  main-is:             Spec.hs
+  build-depends:       base
+                     , cucaracha
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  default-language:    Haskell2010
+
+source-repository head
+  type:     git
+  location: https://github.com/githubuser/cucaracha
