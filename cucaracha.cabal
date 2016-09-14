@@ -19,7 +19,7 @@ library
                     ,  array
   build-tools:         alex, happy
   default-language:    Haskell2010
-  exposed-modules:     Lexer, Parser, ASTPrinter
+  exposed-modules:     Lexer, Parser, ASTPrinter, TypeChecker
 
 executable cucaracha-exe
   hs-source-dirs:      app
@@ -28,7 +28,7 @@ executable cucaracha-exe
   build-depends:       base, array, cucaracha
   build-tools:         alex, happy
   default-language:    Haskell2010
-  exposed-modules:     Lexer, Parser, ASTPrinter
+  exposed-modules:     Lexer, Parser, ASTPrinter, TypeChecker
 
 test-suite cucaracha-test
   type:                exitcode-stdio-1.0
