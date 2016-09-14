@@ -1,13 +1,12 @@
 main :: IO ()
 main = do
   result <- compareFile (head (tail filenames))
-  putStrLn result
+  putStrLn (show result)
 
 compareFile file = do
   inputed <- readInput file
   expected <- readExpected file
-  result <- expected == inputed
-  return result
+  return (expected == inputed)
 
 readInput file = readFile (input file)
 
