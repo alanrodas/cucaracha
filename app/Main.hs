@@ -13,8 +13,11 @@ main = do
       file = head args
     contents <-readFile file
     let ast = parse (tokenize contents)
+    putStrLn (show ast)
+    
+    putStrLn ""
+    putStrLn "------------ Type errors: "
     let typeCheckerMsg = 
-            either id (const "Correct types") 
+            either id (const "the program typechecks") 
                    (runExcept $ checkProgram ast)
     putStrLn typeCheckerMsg
-    putStrLn (show ast)
