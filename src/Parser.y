@@ -50,7 +50,7 @@ Program : {- empty -}                         { EmptyProgram }
 FunctionList : Function                       { [$1] }
         | Function FunctionList               { $1 : $2 }
 
-Function : TkFun Id Params Block ':' Type     { Function $2 $6 $3 $4 }
+Function : TkFun Id Params ':' Type Block     { Function $2 $5 $3 $6 }
       | TkFun Id Params Block                 { Function $2 Unit $3 $4 }
 
 Params : '(' ParamList ')'                    { $2 }
@@ -117,13 +117,13 @@ Id          :   TkId                          { snd $1 }
 {
 
 parseError :: [Token] -> a
-parseError tokens = error ("Error de parseo " ++ show tokens)
+parseError (token:tokens) = error ("Error de parseo " ++ show token)
 
 type Id = String
 
 data Type = Int | Bool | Vec | Unit deriving (Enum, Bounded, Eq, Show)
 
-data ProgramT = EmptyProgram | Program [FunctionT] deriving Show
+data ProgramT = EmptyProgram | Program [FunctionT]
 
 data FunctionT = Function Id Type [ParameterT] BlockT deriving Show
 

@@ -3,8 +3,8 @@ import System.Environment
 import Lexer
 import Parser
 import TypeChecker
--- import ASTPrinter
 import Control.Monad.Except
+import ASTPrinter
 
 
 main :: IO ()
