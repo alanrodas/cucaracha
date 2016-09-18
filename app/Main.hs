@@ -4,6 +4,7 @@ import Lexer
 import Parser
 import TypeChecker
 -- import ASTPrinter
+import Control.Monad.Except
 
 
 main :: IO ()
@@ -13,6 +14,6 @@ main = do
       file = head args
     contents <-readFile file
     let ast = parse (tokenize contents)
-    if either (const True) (const False) (checkProgram ast)
+    if either (const True) (const False) $ runExcept (checkProgram ast)
        then putStrLn (show ast)
        else putStrLn "error de tipos"

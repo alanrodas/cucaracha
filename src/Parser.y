@@ -121,7 +121,7 @@ parseError tokens = error ("Error de parseo " ++ show tokens)
 
 type Id = String
 
-data Type = Int | Bool | Vec | Unit deriving Show
+data Type = Int | Bool | Vec | Unit deriving (Eq, Show)
 
 data ProgramT = EmptyProgram | Program [FunctionT] deriving Show
 
