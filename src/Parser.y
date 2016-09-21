@@ -54,7 +54,7 @@ Function : TkFun Id Params ':' Type Block     { Function $2 $5 $3 $6 }
       | TkFun Id Params Block                 { Function $2 Unit $3 $4 }
 
 Params : '(' ParamList ')'                    { $2 }
-ParamList : ParamList ',' Param               { $3 : $1 }
+ParamList : Param ',' ParamList               { $1 : $3 }
       | Param                                 { [$1] }
       | {- empty -}                           { [] }
 Param : Id ':' Type                           { Parameter $1 $3 }
@@ -71,7 +71,7 @@ Instruction : Id ':=' Exp                     { StmtAssign $1 $3 }
       | TkReturn Exp                          { StmtReturn $2 }
 
       | ProcCall                              { $1 }
-ExpList : ExpList ',' Exp                     { $3 : $1 }
+ExpList : Exp ',' ExpList                     { $1 : $3 }
       | Exp                                   { [$1] }
       | {- empty -}                           { [] }
 Exp : ExpLogic                                { $1 }

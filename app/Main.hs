@@ -6,6 +6,7 @@ import TypeChecker
 import Control.Monad.Except
 import ASTPrinter
 
+main :: IO ()
 main = do
     args <- getArgs
     let
