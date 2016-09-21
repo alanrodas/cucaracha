@@ -6,19 +6,14 @@ idnt :: Int
 idnt = 1
 
 instance Show ProgramT where
-  show p = render (programRepr p)
+  show p = render ((programRepr p) $$ text "")
 
-programRepr EmptyProgram = 
-  parentesis (
-    text      "Program"           $$
-    listRepr  funcRepr [] idnt
-  ) $$ text ""
-
+programRepr EmptyProgram = programRepr (Program [])
 programRepr (Program funcs) =
   parentesis (
     text      "Program"           $$
-    listRepr  funcRepr funcs idnt 
-  ) $$ text ""
+    listRepr  funcRepr funcs idnt
+  )
 
 funcRepr (Function name typ params block) n =
   nestify n "Function" [nested name, typeRepr typ, listRepr paramRepr params, blockRepr block]

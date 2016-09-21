@@ -1,41 +1,115 @@
+import Test.Hspec
+
 import Lexer
 import Parser
 import ASTPrinter
 import TypeChecker
 
+parsed input = parse (tokenize input)
+
+pparsed input = show (parsed input)
+
+typechecks input = either (\x -> False) (\_ -> True) (runTypeCheck (parsed input))
+
 main :: IO ()
-main = do
-  result <- mapM compareFile filenames
-  putStrLn $ "All tests passed? " ++ show (and result)
+main = hspec $ do
+  describe "The parser" $ do
+    it "can parse input00" $ do
+      input <- readFile "test/inputs/test00.input"
+      expected <- readFile "test/inputs/test00.expected"
+      pparsed input `shouldBe` expected
 
-compareFile :: String -> IO Bool
-compareFile file = do  
-  let pathInputed = input file
-  let pathExpected = expected file
-  putStrLn $ 
-    "Comparing " ++ pathInputed ++ " and " ++ pathExpected
+    it "can parse input01" $ do
+      input <- readFile "test/inputs/test01.input"
+      expected <- readFile "test/inputs/test01.expected"
+      pparsed input `shouldBe` expected
 
-  inputed <- readFile pathInputed
-  expected <- readFile pathExpected
-  let ast = parse (tokenize inputed)
-  let astPrint = show ast
-  let result = expected == astPrint
-  putStrLn $ "Equal content? " ++ show result
-  putStrLn $ "Typechecks? " ++ (either
-    (\x -> "No! " ++ x)
-    (\_ -> "Yes")
-    (runTypeCheck ast))
-  putStrLn ""
-  return result
+    it "can parse input02" $ do
+      input <- readFile "test/inputs/test02.input"
+      expected <- readFile "test/inputs/test02.expected"
+      pparsed input `shouldBe` expected
 
-input :: String -> String
-input file = testdir ++ file ++ ".input"
+    it "can parse input03" $ do
+      input <- readFile "test/inputs/test03.input"
+      expected <- readFile "test/inputs/test03.expected"
+      pparsed input `shouldBe` expected
 
-expected :: String -> String
-expected file = testdir ++ file ++ ".expected"
+    it "can parse input04" $ do
+      input <- readFile "test/inputs/test04.input"
+      expected <- readFile "test/inputs/test04.expected"
+      pparsed input `shouldBe` expected
 
-testdir :: String
-testdir = "test/inputs/"
+    it "can parse input05" $ do
+      input <- readFile "test/inputs/test05.input"
+      expected <- readFile "test/inputs/test05.expected"
+      pparsed input `shouldBe` expected
 
-filenames :: [String]
-filenames = map (\x -> "test" ++ (if x >= 10 then "" else "0") ++ show x) [0..10]
+    it "can parse input06" $ do
+      input <- readFile "test/inputs/test06.input"
+      expected <- readFile "test/inputs/test06.expected"
+      pparsed input `shouldBe` expected
+
+    it "can parse input07" $ do
+      input <- readFile "test/inputs/test07.input"
+      expected <- readFile "test/inputs/test07.expected"
+      pparsed input `shouldBe` expected
+
+    it "can parse input08" $ do
+      input <- readFile "test/inputs/test08.input"
+      expected <- readFile "test/inputs/test08.expected"
+      pparsed input `shouldBe` expected
+
+    it "can parse input09" $ do
+      input <- readFile "test/inputs/test09.input"
+      expected <- readFile "test/inputs/test09.expected"
+      pparsed input `shouldBe` expected
+
+    it "can parse input10" $ do
+      input <- readFile "test/inputs/test10.input"
+      expected <- readFile "test/inputs/test10.expected"
+      pparsed input `shouldBe` expected
+
+  describe "The typechecker" $ do
+    it "success typechecking input00" $ do
+      input <- readFile "test/inputs/test00.input"
+      typechecks input `shouldBe` True
+
+    it "success typechecking input01" $ do
+      input <- readFile "test/inputs/test01.input"
+      typechecks input `shouldBe` True
+
+    it "success typechecking input02" $ do
+      input <- readFile "test/inputs/test02.input"
+      typechecks input `shouldBe` True
+
+    it "success typechecking input03" $ do
+      input <- readFile "test/inputs/test03.input"
+      typechecks input `shouldBe` True
+
+    it "fail typechecking input04" $ do
+      input <- readFile "test/inputs/test04.input"
+      typechecks input `shouldBe` False
+
+    it "success typechecking input05" $ do
+      input <- readFile "test/inputs/test05.input"
+      typechecks input `shouldBe` True
+
+    it "success typechecking input06" $ do
+      input <- readFile "test/inputs/test06.input"
+      typechecks input `shouldBe` True
+
+    it "fail typechecking input07" $ do
+      input <- readFile "test/inputs/test07.input"
+      typechecks input `shouldBe` False
+
+    it "success typechecking input08" $ do
+      input <- readFile "test/inputs/test08.input"
+      typechecks input `shouldBe` True
+
+    it "success typechecking input09" $ do
+      input <- readFile "test/inputs/test09.input"
+      typechecks input `shouldBe` True
+
+    it "success typechecking input10" $ do
+      input <- readFile "test/inputs/test10.input"
+      typechecks input `shouldBe` True
