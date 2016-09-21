@@ -2,18 +2,23 @@ module ASTPrinter where
 import Parser
 import Text.PrettyPrint
 
+idnt :: Int
 idnt = 1
 
 instance Show ProgramT where
   show p = render (programRepr p)
 
+programRepr EmptyProgram = 
+  parentesis (
+    text      "Program"           $$
+    listRepr  funcRepr [] idnt
+  ) $$ text ""
 
-programRepr EmptyProgram = empty
 programRepr (Program funcs) =
   parentesis (
     text      "Program"           $$
-    listRepr  funcRepr funcs idnt
-  )
+    listRepr  funcRepr funcs idnt 
+  ) $$ text ""
 
 funcRepr (Function name typ params block) n =
   nestify n "Function" [nested name, typeRepr typ, listRepr paramRepr params, blockRepr block]
