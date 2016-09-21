@@ -1,4 +1,4 @@
-module ASTPrinter where
+module Printer where
 import Parser
 import Text.PrettyPrint
 

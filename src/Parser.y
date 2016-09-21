@@ -1,5 +1,6 @@
 {
 module Parser where
+
 import Lexer
 }
 
@@ -117,7 +118,12 @@ Id          :   TkId                          { snd $1 }
 {
 
 parseError :: [Token] -> a
-parseError (token:tokens) = error ("Error de parseo " ++ show token)
+parseError (token:tokens) = let (item, line, column) = tokenPosn token in
+  error ("Error de parseo: símbolo no válido \"" ++ item ++ "\" en linea " ++ (show line) ++ " columna " ++ (show column))
+
+parsed :: String -> ProgramT
+-- Parse the given input after tokenizing it
+parsed input = parse (tokenize input)
 
 type Id = String
 
