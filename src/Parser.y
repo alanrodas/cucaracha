@@ -78,7 +78,7 @@ Exp : ExpLogic                                { $1 }
 ExpLogic : ExpLogic TkAnd ExpLogicAtom        { ExprAnd $1 $3 }
       | ExpLogic TkOr ExpLogicAtom            { ExprOr $1 $3 }
       | ExpLogicAtom                          { $1 }
-ExpLogicAtom : TkNot ExpLogic                 { ExprNot $2 }
+ExpLogicAtom : TkNot ExpLogicAtom             { ExprNot $2 }
       | ExpRelational                         { $1 }
 ExpRelational : ExpSum '>=' ExpSum            { ExprGe $1 $3 }
       | ExpSum '<=' ExpSum                    { ExprLe $1 $3 }
