@@ -185,6 +185,9 @@ primitives =
     , Function "putNum"  Unit [Parameter "x" Int] (Block [])
     ]
 
+runTypeCheck :: ProgramT -> Either String Type
+runTypeCheck p = runExcept $ checkProgram p
+
 checkProgram :: ProgramT -> Result Type
 checkProgram EmptyProgram = return Unit
 checkProgram (Program fs) = do

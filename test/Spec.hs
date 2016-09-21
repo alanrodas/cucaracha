@@ -1,44 +1,32 @@
 import Lexer
 import Parser
 import ASTPrinter
+import TypeChecker
 
 main :: IO ()
 main = do
   result <- mapM compareFile filenames
-  result <- compareFile (head $ drop 2 filenames)
-  putStrLn ""
-  putStrLn (show result)
+  putStrLn $ "All tests passed? " ++ show (and result)
 
 compareFile :: String -> IO Bool
-compareFile file = do
-  inputed <- readInput file
-  expected <- readExpected file
+compareFile file = do  
+  let pathInputed = input file
+  let pathExpected = expected file
+  putStrLn $ 
+    "Comparing " ++ pathInputed ++ " and " ++ pathExpected
+
+  inputed <- readFile pathInputed
+  expected <- readFile pathExpected
   let ast = parse (tokenize inputed)
   let astPrint = show ast
-  putStrLn "------ Print AST"
-  putStrLn astPrint
-  putStrLn "---------------------"
-  putStrLn "------ Print EXPECTED"
-  putStrLn expected
-  putStrLn "---------------------"
-  putStrLn "------ DIFF"
-  mapM_ (\(b, x, y) -> 
-        do
-            putStrLn "-------------------"
-            putStrLn "error on "
-            putStrLn $ "inputed: \"" ++ x ++ "\""
-            putStrLn $ "expected:\"" ++ x ++ "\""
-            putStrLn "-------------------"
-    ) $ filter (\(b, _, _) -> not b) $ 
-            zipWith (\x y -> (x == y, x, y)) (lines astPrint) (lines expected)
-  putStrLn "---------------------"
-  return (expected == astPrint)
-
-readInput :: String -> IO String
-readInput file = readFile (input file)
-
-readExpected :: String -> IO String
-readExpected file = readFile (expected file)
+  let result = expected == astPrint
+  putStrLn $ "Equal content? " ++ show result
+  putStrLn $ "Typechecks? " ++ (either
+    (\x -> "No! " ++ x)
+    (\_ -> "Yes")
+    (runTypeCheck ast))
+  putStrLn ""
+  return result
 
 input :: String -> String
 input file = testdir ++ file ++ ".input"

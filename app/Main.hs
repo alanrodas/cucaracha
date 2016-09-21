@@ -3,7 +3,6 @@ import System.Environment
 import Lexer
 import Parser
 import TypeChecker
-import Control.Monad.Except
 import ASTPrinter
 
 main :: IO ()
@@ -21,5 +20,5 @@ main = do
     putStrLn "------------ Type errors: "
     let typeCheckerMsg = 
             either id (const "the program typechecks") 
-                   (runExcept $ checkProgram ast)
+                   (runTypeCheck ast)
     putStrLn typeCheckerMsg
