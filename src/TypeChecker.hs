@@ -74,7 +74,7 @@ getFunctionById fId fs =
 findFunctionById :: Id -> FunctionEnv -> Result FunctionT
 findFunctionById fId fs = 
     maybe 
-       (throwError $ "function " ++ fId ++ "does not exist")
+       (throwError $ "function " ++ fId ++ " does not exist")
        (return)
        (getFunctionById fId fs)
 
