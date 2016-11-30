@@ -1,4 +1,5 @@
 module Compiler where
+
 import System.Directory
 import System.IO
 import System.Process
@@ -12,7 +13,9 @@ outputFile filename datum = do
   writeFile filename datum
 
 compile bytecode = do
-  let filename = "./cucaTest.asm"
+  let extensionlessFilename = "./cucaTest"
+  let filename = extensionlessFilename ++ ".asm"
+  dir <- getCurrentDirectory
   outputFile filename (show bytecode)
-  (exit_code, console_out, console_err) <- readProcessWithExitCode "./cuca" [filename] ""
+  (exit_code, console_out, console_err) <- readProcessWithExitCode "bash" [dir ++ "/cuca", extensionlessFilename] ""
   return console_out

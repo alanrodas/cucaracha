@@ -16,12 +16,11 @@ test :: IO ()
 test = hspec $ do
   describe "The parser" $ do
     it "can parse input00" $ do
-      input <- readFile "test/inputs/compiler/test01.input"
-      expected <- readFile "test/inputs/compiler/test01.expected"
+      input <- readFile "test/inputs/compiler/test00.input"
+      expected <- readFile "test/inputs/compiler/test00.expected"
       compiled <- pcompiled input
       compiled `shouldBe` expected
 
-{-
     it "can parse input01" $ do
       input <- readFile "test/inputs/compiler/test01.input"
       expected <- readFile "test/inputs/compiler/test01.expected"
@@ -46,6 +45,7 @@ test = hspec $ do
       compiled <- pcompiled input
       compiled `shouldBe` expected
 
+{-
     it "can parse input05" $ do
       input <- readFile "test/inputs/compiler/test05.input"
       expected <- readFile "test/inputs/compiler/test05.expected"

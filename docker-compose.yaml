@@ -1,7 +1,0 @@
-nasm:
-  restart: always
-  image: alanrodas/nasm
-  privileged: true
-  volumes:
-    - .:/opt
-  command: sh /opt/64

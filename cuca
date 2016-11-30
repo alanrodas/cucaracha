@@ -9,6 +9,13 @@ else
   entrypoint=$2;
 fi
 
-nasm -fmacho64 -o $filename.o $filename.asm;
-ld -e $entrypoint -arch x86_64 -lSystem -macosx_version_min 10.8.0 -no_pie -o $filename $filename.o;
+# nasm -fmacho64 -o $filename.o $filename.asm;
+# ld -e $entrypoint -arch x86_64 -lSystem -macosx_version_min 10.8.0 -no_pie -o $filename $filename.o;
+# rm $filename.o;
+
+nasm -felf64 -o $filename.o $filename.asm;
+gcc -o $filename $filename.o;
+#rm $filename.asm;
 rm $filename.o;
+exec ./$filename;
+rm $filename;

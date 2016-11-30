@@ -50,14 +50,30 @@ data Bytecode = BytecodeEmptyProgram | BytecodeProgram [BytecodeFunc]
 
 data BytecodeFunc = BFunc String [BytecodeStmt]
 
-data BytecodeStmt = BPutChar Int | BPutNum Int | None
+data Register = LLIString | Rdi | Rsi | Rax
+
+data CCallPrimitive = CCPutChar | CCPrintf | CCExit
+
+data BytecodeStmt = Mov Register Integer |
+                    Movr Register Register |
+                    Call String |
+                    CCall CCallPrimitive |
+                    Ret |
+                    None
 
 precompile EmptyProgram = BytecodeEmptyProgram
 precompile (Program [Function "main" Unit [] (Block [])]) = BytecodeEmptyProgram
 precompile (Program funcs) = BytecodeProgram (map precompileFunction funcs)
 
-precompileFunction (Function ident Unit [] (Block stmts)) = BFunc ("cuca_" ++ ident) (map precompileStmt stmts)
+precompileFunction (Function ident Unit [] (Block stmts)) =
+  BFunc ("cuca_" ++ ident) (precompileStmts stmts ++ [Ret])
 
-precompileStmt (StmtCall "putChar" exprs) = BPutChar 2
-precompileStmt (StmtCall "putNum" exprs) = BPutNum 1
-precompileStmt (StmtCall other exprs) = None
+precompileStmts stmts = concat (map precompileStmt stmts)
+
+precompileStmt (StmtCall "putChar" [(ExprConstNum n)] ) = [Mov Rdi n, CCall CCPutChar]
+precompileStmt (StmtCall "putNum" [(ExprConstNum n)] ) = [Mov Rsi n, Movr Rdi LLIString, Mov Rax 0,CCall CCPrintf]
+precompileStmt (StmtCall other exprs) = [Call ]
+
+precompileExprs exprs = concat (map precompileExpr exprs)
+
+precompileExpr (ExprConstNum n) = [Mov Rdi n]
