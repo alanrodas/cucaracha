@@ -119,7 +119,7 @@ Id          :   TkId                          { snd $1 }
 
 parseError :: [Token] -> a
 parseError (token:tokens) = let (item, line, column) = tokenPosn token in
-  error ("Error de parseo: símbolo no válido \"" ++ item ++ "\" en linea " ++ (show line) ++ " columna " ++ (show column))
+  error ("Parse error: invalid symbol \"" ++ item ++ "\" at line " ++ (show line) ++ " column " ++ (show column))
 
 parsed :: String -> ProgramT
 -- Parse the given input after tokenizing it

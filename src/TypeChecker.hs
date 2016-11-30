@@ -26,6 +26,8 @@ typecheck p = runExcept $ checkProgram p
 
 typechecks p = either (\x -> False) (\_ -> True) (typecheck p)
 
+typecheckErrors p = either (\x -> x) (\_ -> "") (typecheck p)
+
 checkProgram :: ProgramT -> Result Type
 checkProgram EmptyProgram = return Unit
 checkProgram (Program fs) = do

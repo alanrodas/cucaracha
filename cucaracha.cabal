@@ -5,9 +5,9 @@ description:         Please see README.md
 homepage:            https://github.com/alanrodas/cucaracha#readme
 license:             BSD3
 license-file:        LICENSE
-author:              Alan Rodas Bonjour & Federico Agustin Sawady O'Connor
-maintainer:          alanrodas@gmail.com & sawady.faso@gmail.com
-copyright:           2016 Alan Rodas Bonjour & Federico Agustin Sawady O'Connor
+author:              Alan Rodas Bonjour
+maintainer:          alanrodas@gmail.com
+copyright:           2016 Alan Rodas Bonjour
 category:            Language
 build-type:          Simple
 extra-source-files:  src/Lexer.x, src/Parser.y
@@ -15,25 +15,23 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  build-depends:       base >= 4.7 && < 5, array, pretty, mtl
+  build-depends:       base >= 4.7 && < 5, array, pretty, mtl, process, directory
   build-tools:         alex, happy
   default-language:    Haskell2010
-  exposed-modules:     Lexer, Parser, Printer, TypeChecker
+  exposed-modules:     Lexer, Parser, Printer, TypeChecker, Precompiler, PrecompilerPrinter, Compiler
 
 executable cucaracha-exe
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base, array, pretty, mtl, cucaracha
-  build-tools:         alex, happy
+  build-depends:       base >= 4.7 && < 5, cucaracha, cmdargs, process, directory
   default-language:    Haskell2010
-  exposed-modules:     Lexer, Parser, Printer, TypeChecker
 
 test-suite cucaracha-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  exposed-modules:     SpecInputFiles, SpecTypeChecker
+  other-modules:       SpecParserInputFiles, SpecTypeChecker, SpecCompilerInputFiles
   build-depends:       base, cucaracha, hspec
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
