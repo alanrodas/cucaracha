@@ -72,7 +72,7 @@ precompileStmts stmts = concat (map precompileStmt stmts)
 
 precompileStmt (StmtCall "putChar" [(ExprConstNum n)] ) = [Mov Rdi n, CCall CCPutChar]
 precompileStmt (StmtCall "putNum" [(ExprConstNum n)] ) = [Mov Rsi n, Movr Rdi LLIString, Mov Rax 0,CCall CCPrintf]
-precompileStmt (StmtCall other exprs) = [Call ]
+precompileStmt (StmtCall name exprs) = [Call name]
 
 precompileExprs exprs = concat (map precompileExpr exprs)
 

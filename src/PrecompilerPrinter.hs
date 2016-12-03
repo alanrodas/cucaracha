@@ -47,7 +47,7 @@ function name contents = text (name ++ ":") $$ (nest idnt contents)
 programRepr style BytecodeEmptyProgram = function (mainFunction style) (stmtsRepr style [Mov Rdi 0, CCall CCExit])
 programRepr style (BytecodeProgram funcs) =
   listRepr style funcRepr funcs $$
-  function (mainFunction style) (stmtsRepr style [Call "cuca_main", Mov Rdi 0, CCall CCExit])
+  function (mainFunction style) (stmtsRepr style [Call "main", Mov Rdi 0, CCall CCExit])
 
 funcRepr style (BFunc name stmts) = function name (stmtsRepr style stmts $$ emptyLine)
 
@@ -56,7 +56,7 @@ stmtsRepr style stmts = listRepr style stmtRepr stmts
 stmtRepr style (Mov reg int) = text "mov" <+> regRepr style reg <> comma <+> text (show int)
 stmtRepr style (Movr reg reg2) = text "mov" <+> regRepr style reg <> comma <+> regRepr style reg2
 stmtRepr style (CCall prim) = text "call" <+> primRepr style prim
-stmtRepr style (Call name) = text "call" <+> text name
+stmtRepr style (Call name) = text "call" <+> text "cuca_" <> text name
 stmtRepr style (Ret) = text "ret"
 
 regRepr style Rdi = text "rdi"
