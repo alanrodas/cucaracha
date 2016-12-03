@@ -45,7 +45,6 @@ test = hspec $ do
       compiled <- pcompiled input
       compiled `shouldBe` expected
 
-{-
     it "can parse input05" $ do
       input <- readFile "test/inputs/compiler/test05.input"
       expected <- readFile "test/inputs/compiler/test05.expected"
@@ -81,4 +80,39 @@ test = hspec $ do
       expected <- readFile "test/inputs/compiler/test10.expected"
       compiled <- pcompiled input
       compiled `shouldBe` expected
--}
+
+    it "can parse input10" $ do
+      input <- readFile "test/inputs/compiler/test10.input"
+      expected <- readFile "test/inputs/compiler/test10.expected"
+      compiled <- pcompiled input
+      compiled `shouldBe` expected
+
+    it "can parse input10" $ do
+      input <- readFile "test/inputs/compiler/test10.input"
+      expected <- readFile "test/inputs/compiler/test10.expected"
+      compiled <- pcompiled input
+      compiled `shouldBe` expected
+
+    it "can parse input10" $ do
+      input <- readFile "test/inputs/compiler/test10.input"
+      expected <- readFile "test/inputs/compiler/test10.expected"
+      compiled <- pcompiled input
+      compiled `shouldBe` expected
+
+    it "can parse input11" $ do
+      input <- readFile "test/inputs/compiler/test11.input"
+      expected <- readFile "test/inputs/compiler/test11.expected"
+      compiled <- pcompiled input
+      compiled `shouldBe` expected
+
+    it "can parse input11" $ do
+      input <- readFile "test/inputs/compiler/test11.input"
+      expected <- readFile "test/inputs/compiler/test11.expected"
+      compiled <- pcompiled input
+      compiled `shouldBe` expected
+
+  it "can parse input12" $ do
+      input <- readFile "test/inputs/compiler/test12.input"
+      expected <- readFile "test/inputs/compiler/test12.expected"
+      compiled <- pcompiled input
+      compiled `shouldBe` expected
