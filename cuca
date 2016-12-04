@@ -1,21 +1,74 @@
 #!/bin/bash
 
-filename=$1;
+#filename=$1;
 
-if [ -z "$2" ]
-then
-  entrypoint=_main;
-else
-  entrypoint=$2;
-fi
+#if [ -z "$2" ]
+#then
+#  entrypoint=_main;
+#else
+#  entrypoint=$2;
+#fi
 
 # nasm -fmacho64 -o $filename.o $filename.asm;
 # ld -e $entrypoint -arch x86_64 -lSystem -macosx_version_min 10.8.0 -no_pie -o $filename $filename.o;
 # rm $filename.o;
 
-nasm -felf64 -o $filename.o $filename.asm;
-gcc -o $filename $filename.o;
-#rm $filename.asm;
-rm $filename.o;
-exec ./$filename;
-rm $filename;
+run='false'
+deleteintermediate='true'
+deleteoutput='true'
+filename=''
+objectfile=''
+output=''
+
+# Parse command line arguments
+while getopts 'dDro:l:f:' flag; do
+  case "${flag}" in
+    d) deleteintermediate='false' ;;
+    D) deleteoutput="false" ;;
+    r) run='true' ;;
+    o) output="${OPTARG}" ;;
+    l) objectfile="${OPTARG}" ;;
+    f) filename="${OPTARG}" ;;
+    *) error "Unexpected option ${flag}" ;;
+  esac
+done
+
+#Get the default name if no arguments are given (short mode)
+shift $(($OPTIND - 1))
+default=$1
+
+# Use default if no more specific name is given
+if [ -z "$filename" ] && ! [ -z "$default" ]; then filename=$default".asm"; fi
+if [ -z "$objectfile" ] && ! [ -z "$default" ]; then objectfile=$default".o"; fi
+if [ -z "$output" ] && ! [ -z "$default" ]; then output=$default; fi
+
+# Check that filenames are given correctly and fail otherwise
+if [ -z "$filename" ]; then echo "No filename specified nor default name given"; exit 1; fi
+if [ -z "$objectfile" ]; then echo "No intermediate output specified nor default name given"; exit 1; fi
+if [ -z "$output" ]; then echo "No output file specified nor default name given"; exit 1; fi
+
+# Check the main filename exists, fail otherwise
+if ! [ -f $filename ]; then echo "cuca: Unable to open input file '$filename'"; exit 1; fi
+# Delete output files if needed
+if [ -f $objectfile ]; then rm $objectfile;  fi
+if [ -f $output ]; then rm $output; fi
+
+# Perform linking with NASM. Fail in case of errors
+nasm -felf64 -o $objectfile $filename;
+if ! [ -f $objectfile ]; then exit 1; fi
+
+# Perform compilation with C. Fail in case of errors
+gcc -o $output $objectfile;
+if ! [ -f $output ]; then exit 1; fi
+
+# Delete intermediate file if needed
+#if [ "$deleteintermediate" = true ]; then rm $objectfile; fi
+
+# If run is selected, execute the output
+if [ -f $output ] && [ "$run" = true ]; then
+  exec ./$output;
+fi
+
+# Note that failures in code will avoid getting to this pointç
+# Delete output file if needed
+#if [ "$deleteoutput" = true ]; then rm $output; fi

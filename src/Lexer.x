@@ -85,7 +85,7 @@ data Token =
            | TokenWhile AlexPosn
            | TokenReturn AlexPosn
            | TokenId (AlexPosn, String)
-           | TokenNum (AlexPosn, Integer)
+           | TokenNum (AlexPosn, Int)
            deriving (Eq,Show)
 
 tokenize = alexScanTokens

@@ -1,4 +1,8 @@
-module TypeChecker where
+module TypeChecker(
+  typecheck,
+  typechecks,
+  typecheckErrors
+) where
 
 import Data.List
 import Data.Either
@@ -9,17 +13,9 @@ import Control.Monad.Except
 
 import Parser
 
-type Result = Except String
-
----------------------------------------------------------------
--- CHECK PROGRAM ----------------------------------------------
----------------------------------------------------------------
-primitives :: [FunctionT]
-primitives =
-    [
-      Function "putChar" Unit [Parameter "x" Int] (Block [])
-    , Function "putNum"  Unit [Parameter "x" Int] (Block [])
-    ]
+--------------------------------------------------------------------------------
+--                              EXPORTED                                      --
+--------------------------------------------------------------------------------
 
 typecheck :: ProgramT -> Either String Type
 typecheck p = runExcept $ checkProgram p
@@ -27,6 +23,12 @@ typecheck p = runExcept $ checkProgram p
 typechecks p = either (\x -> False) (\_ -> True) (typecheck p)
 
 typecheckErrors p = either (\x -> x) (\_ -> "") (typecheck p)
+
+--------------------------------------------------------------------------------
+--                              INTERNAL                                      --
+--------------------------------------------------------------------------------
+
+type Result = Except String
 
 checkProgram :: ProgramT -> Result Type
 checkProgram EmptyProgram = return Unit
@@ -37,6 +39,14 @@ checkProgram (Program fs) = do
        noVecFunctions fs
        mapM_ (checkFunction (primitives ++ fs)) fs
        return Unit
+
+primitives :: [FunctionT]
+primitives =
+   [
+     Function "putChar" Unit [Parameter "x" Int] (Block [])
+   , Function "putNum"  Unit [Parameter "x" Int] (Block [])
+   ]
+
 
 checkMain :: FunctionEnv -> Result ()
 checkMain fs = case getFunctionById "main" fs of

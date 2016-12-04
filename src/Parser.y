@@ -147,7 +147,7 @@ data StmtT = StmtAssign Id ExprT
         deriving Show
 
 data ExprT = ExprVar Id
-        | ExprConstNum Integer
+        | ExprConstNum Int
         | ExprConstBool Bool
         | ExprVecMake [ExprT]
         | ExprVecLength Id

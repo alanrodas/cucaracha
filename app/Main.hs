@@ -14,6 +14,8 @@ import Lexer
 import Parser
 import Printer
 import TypeChecker
+import Precompiler
+import PrecompilerPrinter
 
 data Cucaracha = Cucaracha {
                      tokens   :: Bool
@@ -38,8 +40,8 @@ sample = Cucaracha{
             ,out       = def &= help "The output file" &= typ "[output]" &= opt "program"
          }
 
-outputFile :: String -> String -> IO()
-outputFile filename datum = do
+outputFileToDisk :: String -> String -> IO()
+outputFileToDisk filename datum = do
   appendFile filename ""
   writeFile filename datum
 
@@ -50,9 +52,8 @@ main = do
                      &= program "Cucaracha"
                      &= summary "Cucaracha v0.1"
             )
+    dir <- getCurrentDirectory
     inputFile <- (canonicalizePath (file args))
-    -- outputFile <- (absoluteFilename out args)
-    putStrLn inputFile
 
     existsInput <- doesFileExist (inputFile)
     -- Exit if the input file does not exists
@@ -85,27 +86,30 @@ main = do
     when (not tc || (check args && not (assembly args) && not (compile args || execute args))) (exitSuccess)
 
     -- assembly
-    let assembled = "This is the assembly file printed"
-    -- produce assembly
-    -- outputFile (out args) assembled
+    let assembled = precompile asted
+    let filename = if  (assembly args && not (compile args || execute args)) then (out args) else (out args) ++ ".asm"
+    outputFileToDisk filename (show assembled)
     -- Exit if there are no more stept to perform to increment performance
     when (assembly args && not (compile args || execute args)) (exitSuccess)
 
     -- fully compile
-    (exit_code, console_out, console_err) <- readProcessWithExitCode "./cuca" [(out args)] ""
+    (exit_code, console_out, console_err) <- readProcessWithExitCode "bash" [dir ++ "/cuca", "-f", filename, "-o", (out args), "-l", filename ++ ".o"] ""
     -- Print compilation message at this point
     when (exit_code /= ExitSuccess) (putStrLn console_err)
     when (exit_code == ExitSuccess) (putStrLn "Cucaracha program compiled succesfully")
+
+    -- Exit if there are no more stept to perform to increment performance
+    when (not (execute args)) (exitSuccess)
 
     -- If the program is going to be ran, print a waring
     when (execute args) (putStrLn "Running the generated program:")
     when (execute args) (putStrLn "")
     when (execute args) (putStrLn "-------------------------------")
 
-    -- Exit if there are no more stept to perform to increment performance
-    when (not (execute args)) (exitSuccess)
-
     -- execute the program if it was requested so
+    (exit_code2, console_out2, console_err2) <- readProcessWithExitCode "bash" ["exec", (out args)] ""
+    when (exit_code /= ExitSuccess) (putStrLn console_err)
+    when (exit_code == ExitSuccess) (putStrLn console_out2)
 
     -- print program execution finished message
     putStrLn "-------------------------------"

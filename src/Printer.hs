@@ -1,9 +1,12 @@
-module Printer where
+module Printer(
+  programRepr
+) where
 import Parser
 import Text.PrettyPrint
 
-idnt :: Int
-idnt = 1
+--------------------------------------------------------------------------------
+--                              EXPORTED                                      --
+--------------------------------------------------------------------------------
 
 instance Show ProgramT where
   show p = render ((programRepr p) $$ text "")
@@ -14,6 +17,13 @@ programRepr (Program funcs) =
     text      "Program"           $$
     listRepr  funcRepr funcs idnt
   )
+
+--------------------------------------------------------------------------------
+--                              INTERNAL                                      --
+--------------------------------------------------------------------------------
+
+idnt :: Int
+idnt = 1
 
 funcRepr (Function name typ params block) n =
   nestify n "Function" [nested name, typeRepr typ, listRepr paramRepr params, blockRepr block]
