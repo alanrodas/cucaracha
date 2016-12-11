@@ -6,7 +6,7 @@ import qualified SpecCompilerInputFiles as CIF
 
 main :: IO ()
 main = do
-  -- _ <- TC.test
-  -- _ <- PIF.test
+  _ <- TC.test
+  _ <- PIF.test
   _ <- CIF.test
-  putStrLn "\n2 test executed, check the console to see the results"
+  putStrLn "\n3 test groups executed, check the console above to see the results"

@@ -45,6 +45,7 @@ data BytecodeStmt = Mov BytecodeValue BytecodeValue
                   | Jge String
                   | Jl String
                   | Jg String
+                  | Inc BytecodeValue
                   | Sal BytecodeValue BytecodeValue
                   | Label String
                   | Comment String

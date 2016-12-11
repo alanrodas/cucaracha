@@ -17,269 +17,245 @@ import Parser
 --------------------------------------------------------------------------------
 
 assemble :: ProgramT -> Bytecode
-assemble = precompileProgram
+assemble = assembleProgram
 
 --------------------------------------------------------------------------------
 --                              INTERNAL                                      --
 --------------------------------------------------------------------------------
-
----------- Initialization
--------------------------
-
-
----------- Program
-------------------
-precompileProgram prog
+assembleProgram :: ProgramT -> Bytecode
+assembleProgram prog
   | (prog == EmptyProgram) ||
     (prog == (Program [Function "main" Unit [] (Block [])])) = BytecodeEmptyProgram
-precompileProgram (Program funcs) = BytecodeProgram (evalState (mapS precompileFunction funcs) initialRegisterStatus)
+assembleProgram (Program funcs) = BytecodeProgram (evalState (mapS assembleFunction funcs) initialRegisterStatus)
 
 
----------- Functions
---------------------
-
-precompileFunction funct@(Function ident _ _ block) = do
+----------- Functions -----------
+assembleFunction :: FunctionT -> State RegisterStatus BytecodeFunc
+assembleFunction funct@(Function ident _ _ block) = do
   prologue funct
-  blockCmds <-precompileBlock block
+  blockCmds <-assembleBlock block
   varSize <- localVarsSize
   return (BFunc ("cuca_" ++ ident)
     ((functionInitialization varSize) ++ blockCmds ++ (functionDeinitialization) ))
 
----------- Block
-----------------
-precompileBlock (Block stmts) = do
-  blockCmds <- concatS $ mapS precompileStmt stmts
+----------- Block -----------
+assembleBlock :: BlockT -> State RegisterStatus [BytecodeStmt]
+assembleBlock (Block stmts) = do
+  blockCmds <- concatS $ mapS assembleStmt stmts
   return (blockCmds)
 
-
----------- Parameters
-----------------------
--- a list of parameters
-precompileParams reg exprs = concatS $ mapS (precompileParam reg) (withIndices exprs)
-
--- Constants
-precompileParam reg (i, expr) = do
+----------- Params -----------
+assembleParam :: BytecodeValue -> (Int, ExprT) -> State RegisterStatus [BytecodeStmt]
+assembleParam reg (i, expr@(ExprVecMake _)) = do
   argAddress <- argAddr i
-  exprCmds <- precompileExpr reg expr
-  return (exprCmds ++ [Mov argAddress reg])
+  exprCmds <- assembleExpr reg expr
+  return (
+    (Add Rsp $ Const 8) ++=
+    exprCmds ++
+    (Sub Rsp $ Const 8) +=
+    Mov argAddress reg)
+assembleParam reg (i, expr) = do
+  argAddress <- argAddr i
+  exprCmds <- assembleExpr reg expr
+  return (
+    exprCmds +==
+    Mov argAddress reg)
 
----------- Statements
----------------------
--- Calls
-    -- putChar
-precompileStmt (StmtCall "putChar" [expr] ) = do
-  exprCmds <- (precompileExpr Rdi expr)
+----------- Statements -----------
+assembleStmt :: StmtT -> State RegisterStatus [BytecodeStmt]
+-- putChar
+assembleStmt (StmtCall "putChar" [expr] ) = do
+  exprCmds <- (assembleExpr Rdi expr)
   return (
     exprCmds +==
     CCall CCPutChar)
-    -- putNum
-precompileStmt (StmtCall "putNum" [expr] ) = do
-  exprCmds <- (precompileExpr Rsi expr)
+-- putNum
+assembleStmt (StmtCall "putNum" [expr] ) = do
+  exprCmds <- (assembleExpr Rsi expr)
   return (
     exprCmds ++
     Mov Rdi LLIString ++=
     (Mov Rax $ Const 0) +=
     CCall CCPrintf)
-      -- parameterless call
-precompileStmt (StmtCall name []) = do
+-- parameterless call
+assembleStmt (StmtCall name []) = do
   return ([Call $ "cuca_" ++ name])
-      -- call with N parameters
-precompileStmt (StmtCall name exprs) = do
-  paramsCmds <- precompileParams Rdi exprs
+-- call with parameters
+assembleStmt (StmtCall name exprs) = do
+  paramsCmds <- assembleParams Rdi exprs
   return (
     (Sub Rsp $ Const (word $ length exprs)) ++=
     paramsCmds ++
     (Call $ "cuca_" ++ name) +=
     (Add Rsp $ Const (word $ length exprs)) )
 -- Asignments
-precompileStmt (StmtAssign name expr) = do
+assembleStmt (StmtAssign name expr) = do
   address <- addr name
-  exprCmds <- precompileExpr Rdi expr
+  exprCmds <- assembleExpr Rdi expr
   return (
     exprCmds +==
-    (Commented (name ++ " assignment") $ Mov address Rdi))
+    Mov address Rdi)
 -- Returns
-precompileStmt (StmtReturn expr) = do
+assembleStmt (StmtReturn expr) = do
   address <- returnAddr
-  exprCmds <- precompileExpr Rdi expr
+  exprCmds <- assembleExpr Rdi expr
   return (
     exprCmds +==
-    (Commented "return" $ Mov address Rdi))
--- If no else
-precompileStmt (StmtIf expr block) = do
-  exprCmds <- precompileExpr Rsi expr
-  blockCmds <- precompileBlock block
+    Mov address Rdi)
+-- If without else
+assembleStmt (StmtIf expr block) = do
+  exprCmds <- assembleExpr Rsi expr
+  blockCmds <- assembleBlock block
   i <- nextLabelIndex
   return (
-    Comment "if start" ++=
     exprCmds ++
-    (Commented "if comparison" $ Cmp Rsi $ Const 0) ++=
+    (Cmp Rsi $ Const 0) ++=
     (Je $ label i "if_end") ++=
-    Comment "if_then" ++=
     blockCmds +==
     (Label $ label i "if_end"))
-precompileStmt (StmtIfElse expr block1 block2) = do
-  exprCmds <- precompileExpr Rsi expr
-  blockCmds1 <- precompileBlock block1
-  blockCmds2 <- precompileBlock block2
+-- If with Else
+assembleStmt (StmtIfElse expr block1 block2) = do
+  exprCmds <- assembleExpr Rsi expr
+  blockCmds1 <- assembleBlock block1
+  blockCmds2 <- assembleBlock block2
   i <- nextLabelIndex
   return (
-    Comment "if start" ++=
     exprCmds ++
-    (Commented "if comparison" $ Cmp Rsi $ Const 0) ++=
+    (Cmp Rsi $ Const 0) ++=
     (Je $ label i "if_else") ++=
-    Comment "if_then" ++=
     blockCmds1 ++
     (Jmp $ label i "if_end") ++=
     (Label $ label i "if_else") ++=
     blockCmds2 +==
     (Label $ label i "if_end"))
-precompileStmt (StmtWhile expr block) = do
-  exprCmds <- precompileExpr Rsi expr
-  blockCmds <- precompileBlock block
+-- While
+assembleStmt (StmtWhile expr block) = do
+  exprCmds <- assembleExpr Rsi expr
+  blockCmds <- assembleBlock block
   i <- nextLabelIndex
   return (
     (Label $ label i "while_start") ++=
     exprCmds ++
-    (Commented "while comparison" $ Cmp Rsi $ Const 0) ++=
+    (Cmp Rsi $ Const 0) ++=
     (Je $ label i "while_end") ++=
     blockCmds ++
     (Jmp $ label i "while_start") +=
     (Label $ label i "while_end"))
-
-
-
-
-
-
-
----------- Expressions
-----------------------
--- Constants
-precompileExpr reg (ExprConstNum n) = do
-  return [Commented (show n) $ Mov reg $ Const n]
-precompileExpr reg (ExprConstBool False) = do
-  return [Commented "false" $ Mov reg $ Const 0]
-precompileExpr reg (ExprConstBool True) = do
-  return [Commented "true" $ Mov reg $ Const (-1)]
--- Variables or params
-precompileExpr reg (ExprVar name) = do
+-- Vector Assignment
+assembleStmt (StmtVecAssign name exprIdx expr) = do
+  exprCmds <- assembleExpr Rdi expr
+  exprIdxCmds <- assembleExpr Rsi exprIdx
   address <- addr name
   return (
-    Comment("fetch " ++ name) ++=
+    exprCmds ++
+    exprIdxCmds ++
+    Mov Rax Rsi ++=
+    Inc Rax ++=
+    (Sal Rax $ Const 3) ++=
+    Add Rax address +=
+    Mov (Mem Rax "+" 0) Rdi)
+
+----------- Expressions -----------
+-- Numeric Constants
+assembleExpr reg (ExprConstNum n) = do
+  return [Mov reg $ Const n]
+-- Boolean Constants
+assembleExpr reg (ExprConstBool False) = do
+  return [Mov reg $ Const 0]
+assembleExpr reg (ExprConstBool True) = do
+  return [Mov reg $ Const (-1)]
+-- Variables or params
+assembleExpr reg (ExprVar name) = do
+  address <- addr name
+  return (
     (usingTemporary $ Mov reg address))
 -- Addition
-precompileExpr reg (ExprAdd exp1 exp2) = do
-  (exprs, next) <- precompileBinaryExpr reg exp1 exp2
+assembleExpr reg (ExprAdd exp1 exp2) = do
+  (exprs, next) <- assembleBinaryExpr reg exp1 exp2
   return (
     exprs ++
     (usingTemporary $ Add reg next))
 -- Subtraction
-precompileExpr reg (ExprSub exp1 exp2) = do
-  (exprs, next) <- precompileBinaryExpr reg exp1 exp2
+assembleExpr reg (ExprSub exp1 exp2) = do
+  (exprs, next) <- assembleBinaryExpr reg exp1 exp2
   return (
     exprs ++
     (usingTemporary $ Sub reg next))
 -- Multiplication
-precompileExpr reg (ExprMul exp1 exp2) = do
-  (exprs, next) <- precompileBinaryExpr reg exp1 exp2
+assembleExpr reg (ExprMul exp1 exp2) = do
+  (exprs, next) <- assembleBinaryExpr reg exp1 exp2
   return (
     exprs ++
     Mov Rax reg ++=
     Mul next ++=
     (usingTemporary $ Mov reg Rax))
--- And
-precompileExpr reg (ExprAnd exp1 exp2) = do
-  (exprs, next) <- precompileBinaryExpr reg exp1 exp2
+-- Boolean AND
+assembleExpr reg (ExprAnd exp1 exp2) = do
+  (exprs, next) <- assembleBinaryExpr reg exp1 exp2
   return (
     exprs ++
     (usingTemporary $ And reg next))
--- Or
-precompileExpr reg (ExprOr exp1 exp2) = do
-  (exprs, next) <- precompileBinaryExpr reg exp1 exp2
+-- Boolean OR
+assembleExpr reg (ExprOr exp1 exp2) = do
+  (exprs, next) <- assembleBinaryExpr reg exp1 exp2
   return (
     exprs ++
     (usingTemporary $ Or reg next))
--- Not
-precompileExpr reg (ExprNot expr) = do
-  exprs <- precompileExpr reg expr
+-- Boolean NOT
+assembleExpr reg (ExprNot expr) = do
+  exprs <- assembleExpr reg expr
   return (
     exprs ++
     (usingTemporary $ Not reg))
 -- Comparisons
-precompileExpr reg (ExprEq expr1 expr2) = precompileComparison reg expr1 expr2 Je
-precompileExpr reg (ExprNe expr1 expr2) = precompileComparison reg expr1 expr2 Jne
-precompileExpr reg (ExprGt expr1 expr2) = precompileComparison reg expr1 expr2 Jg
-precompileExpr reg (ExprLt expr1 expr2) = precompileComparison reg expr1 expr2 Jl
-precompileExpr reg (ExprGe expr1 expr2) = precompileComparison reg expr1 expr2 Jge
-precompileExpr reg (ExprLe expr1 expr2) = precompileComparison reg expr1 expr2 Jle
+assembleExpr reg (ExprEq expr1 expr2) = assembleComparison reg expr1 expr2 Je
+assembleExpr reg (ExprNe expr1 expr2) = assembleComparison reg expr1 expr2 Jne
+assembleExpr reg (ExprGt expr1 expr2) = assembleComparison reg expr1 expr2 Jg
+assembleExpr reg (ExprLt expr1 expr2) = assembleComparison reg expr1 expr2 Jl
+assembleExpr reg (ExprGe expr1 expr2) = assembleComparison reg expr1 expr2 Jge
+assembleExpr reg (ExprLe expr1 expr2) = assembleComparison reg expr1 expr2 Jle
 --Function Calls
-precompileExpr reg (ExprCall name exprs) = do
-  paramsCmds <- precompileParams Rdi exprs
+assembleExpr reg (ExprCall name exprs) = do
+  paramsCmds <- assembleParams Rdi exprs
   address <- returnAddr
   usedPush <- usedRegsPush
   usedPop <- usedRegsPop
-  paramsCmds <- precompileParams Rdi exprs
+  paramsCmds <- assembleParams Rdi exprs
   return (
-    Comment "Function call pre-saving registers" ++=
     usedPush ++
     (Sub Rsp $ Const (word $ length exprs)) ++=
     paramsCmds ++
     (Call $ "cuca_" ++ name) ++=
     (Add Rsp $ Const (word $ length exprs)) ++=
-    usedPop ++
-    Mov reg Rax +=
-    Comment "Ending function call")
--- Vectors
-precompileExpr reg (ExprVecMake exprs) = do
-  vectorItems <- precompileVectorExprs Rsi exprs
-  sizeAddr <- vecAddr Rsi 0
+    usedPop +==
+    Mov reg Rax)
+-- Vector Creation
+assembleExpr reg (ExprVecMake exprs) = do
+  vectorItems <- assembleVectorExprs Rdi Rsi exprs
+  sizeAddr <- vecAddr Rdi 0
   return (
     Sub Rsp (Const $ word $ length exprs + 1) ++=
     Mov Rdi Rsp ++=
     (MovQ sizeAddr (Const $ length exprs)) ++=
     vectorItems)
-
--- a vector construction
-precompileVectorExprs reg exprs = concatS $ mapS (precompileVectorExpr reg) (withIndices exprs)
-
--- Vector
-precompileVectorExpr reg (i, expr) = do
-  argAddress <- vecAddr Rsi (i+1)
-  exprCmds <- precompileExpr reg expr
+-- Vector Length
+assembleExpr reg (ExprVecLength name) = do
+  address <- addr name
   return (
-    exprCmds +==
-    MovQ argAddress reg)
-
-usedRegsDo f registers = map (\r -> f r) registers
-usedRegsPush = do
-  regs <- getUsedRegisters
-  return (usedRegsDo Push $ regs)
-usedRegsPop = do
-  regs <- getUsedRegisters
-  return (usedRegsDo Pop $ reverse regs)
-
-precompileBinaryExpr reg exp1 exp2 = do
-  expr1cmds <- precompileExpr reg exp1
-  next <- nextRegister
-  expr2cmds <- precompileExpr next exp2
-  freeRegister next
-  return (expr1cmds ++ expr2cmds, next)
-
-precompileComparison reg expr1 expr2 jump = do
-  exprsCmds1 <- precompileExpr Rsi expr1
-  exprsCmds2 <- precompileExpr Rdi expr2
-  i <- nextLabelIndex
+    Mov Rax address +=
+    Mov reg (Mem Rax "+" 0))
+-- Vector Deref
+assembleExpr reg (ExprVecDeref name expr) = do
+  exprCmds <- assembleExpr reg expr
+  address <- addr name
   return (
-    exprsCmds1 ++
-    exprsCmds2 ++
-    Comment "Start a numeric comparisson" ++=
-    (Mov Rdx $ Const (-1)) ++=
-    (Commented "Comparing" $ Cmp Rsi Rdi) ++=
-    (jump $ label i "cmp_end") ++=
-    (Mov Rdx $ Const 0) ++=
-    (Label $ label i "cmp_end") +=
-    (Commented "Compared in reg" $ Mov reg Rdx))
+    exprCmds ++
+    Mov Rax reg ++=
+    Inc Rax ++=
+    (Sal Rax $ Const 3) ++=
+    Add Rax address +=
+    Mov reg (Mem Rax "+" 0))
+
 
 --------------------------------------------------------------------------------
 --                              INIT & DEINIT                                 --
@@ -354,5 +330,52 @@ addr name = do
   if param then paramAddr name else varAddr name
 
 --------------------------------------------------------------------------------
+--                          GENERAL LIST HELPERS                              --
+--------------------------------------------------------------------------------
+-- a list of parameters passed to a function
+assembleParams :: BytecodeValue -> [ExprT] -> State RegisterStatus [BytecodeStmt]
+assembleParams reg exprs = concatS $ mapS (assembleParam reg) (withIndices exprs)
+
+-- a list of expressions in a vector construction
+assembleVectorExprs :: BytecodeValue -> BytecodeValue -> [ExprT] -> State RegisterStatus [BytecodeStmt]
+assembleVectorExprs regV reg exprs = concatS $ mapS (assembleVectorExpr regV reg) (withIndices exprs)
+
+--------------------------------------------------------------------------------
 --                             GENERAL HELPERS                                --
 --------------------------------------------------------------------------------
+-- Vector
+assembleVectorExpr regV reg (i, expr) = do
+  argAddress <- vecAddr regV (i+1)
+  exprCmds <- assembleExpr reg expr
+  return (
+    exprCmds +==
+    MovQ argAddress reg)
+
+usedRegsDo f registers = map (\r -> f r) registers
+usedRegsPush = do
+  regs <- getUsedRegisters
+  return (usedRegsDo Push $ regs)
+usedRegsPop = do
+  regs <- getUsedRegisters
+  return (usedRegsDo Pop $ reverse regs)
+
+assembleBinaryExpr reg exp1 exp2 = do
+  expr1cmds <- assembleExpr reg exp1
+  next <- nextRegister
+  expr2cmds <- assembleExpr next exp2
+  freeRegister next
+  return (expr1cmds ++ expr2cmds, next)
+
+assembleComparison reg expr1 expr2 jump = do
+  exprsCmds1 <- assembleExpr Rsi expr1
+  exprsCmds2 <- assembleExpr Rdi expr2
+  i <- nextLabelIndex
+  return (
+    exprsCmds1 ++
+    exprsCmds2 ++
+    (Mov Rdx $ Const (-1)) ++=
+    (Cmp Rsi Rdi) ++=
+    (jump $ label i "cmp_end") ++=
+    (Mov Rdx $ Const 0) ++=
+    (Label $ label i "cmp_end") +=
+    (Mov reg Rdx))

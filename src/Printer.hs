@@ -7,38 +7,36 @@ import Text.PrettyPrint
 --------------------------------------------------------------------------------
 --                              EXPORTED                                      --
 --------------------------------------------------------------------------------
-
 instance Show ProgramT where
   show p = render $ (programRepr idnt p) $$ text ""
 
+programRepr :: Int -> ProgramT -> Doc
 programRepr n EmptyProgram = programRepr n $ Program []
 programRepr n (Program funcs) =
   parenthesis (
     text      "Program"           $$
     listRepr  funcRepr funcs n
   )
---------------------------------------------------------------------------------
---                              CONSTANTS                                     --
---------------------------------------------------------------------------------
-
-idnt :: Int
-idnt = 1
 
 --------------------------------------------------------------------------------
 --                              INTERNAL                                      --
 --------------------------------------------------------------------------------
-
+funcRepr :: FunctionT -> Int -> Doc
 funcRepr (Function name typ params block) n =
   nestify n "Function" [nested name, typeRepr typ, listRepr paramRepr params, blockRepr block]
 
+typeRepr :: Type -> Int -> Doc
 typeRepr typ n = nested (show typ) n
 
+paramRepr :: ParameterT -> Int -> Doc
 paramRepr (Parameter name typ) n =
   nestify n "Parameter" [nested name, typeRepr typ]
 
+blockRepr :: BlockT -> Int -> Doc
 blockRepr (Block stmts) n =
   nestify n "Block" [listRepr stmtRepr stmts]
 
+stmtRepr :: StmtT -> Int -> Doc
 stmtRepr (StmtAssign name expr) n =
   nestify n "StmtAssign" [nested name, exprRepr expr]
 stmtRepr (StmtVecAssign name exprL exprR) n =
@@ -54,6 +52,7 @@ stmtRepr (StmtReturn expr) n =
 stmtRepr (StmtCall name exprsns) n =
   nestify n "StmtCall" [nested name, listRepr exprRepr exprsns]
 
+exprRepr :: ExprT -> Int -> Doc
 exprRepr (ExprVar name) n =
   nestify n "ExprVar" [nested name]
 exprRepr (ExprConstNum val) n =
@@ -93,10 +92,11 @@ exprRepr (ExprSub exprL exprR) n =
 exprRepr (ExprMul exprL exprR) n =
   nestify n "ExprMul" [exprRepr exprL, exprRepr exprR]
 
-
 --------------------------------------------------------------------------------
 --                               HELPERS                                      --
 --------------------------------------------------------------------------------
+idnt :: Int
+idnt = 1
 
 nested :: String -> Int -> Doc
 -- Return a doc of the given string nested a given amount of places to the right

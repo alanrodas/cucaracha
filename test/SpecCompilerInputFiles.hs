@@ -3,14 +3,16 @@ module SpecCompilerInputFiles(test) where
 import Test.Hspec
 
 import System.Directory
+import System.Exit
 import System.Process
 
-import Lexer
-import Parser
-import Printer
-import TypeChecker
-import Precompiler
-import PrecompilerPrinter
+import qualified Lexer
+import qualified Parser
+import qualified Printer
+import qualified TypeChecker
+import qualified Assembler
+import qualified AssemblyPrinter
+import qualified Compiler
 
 test :: IO ()
 test = hspec $ do
@@ -321,8 +323,8 @@ test = hspec $ do
       expected <- readFile "test/inputs/compiler/test50.expected"
       compiled <- pcompiled input
       compiled `shouldBe` expected
-{-
-      it "51 - Vector creations and length testing" $ do
+
+    it "51 - Vector creations and length testing" $ do
       input <- readFile "test/inputs/compiler/test51.input"
       expected <- readFile "test/inputs/compiler/test51.expected"
       compiled <- pcompiled input
@@ -351,22 +353,8 @@ test = hspec $ do
       expected <- readFile "test/inputs/compiler/test55.expected"
       compiled <- pcompiled input
       compiled `shouldBe` expected
--}
 
-
-outputFile :: String -> String -> IO()
-outputFile filename datum = do
-  appendFile filename ""
-  writeFile filename datum
-
-compile checkedAst = compileBytecode (precompile checkedAst)
-
-compileBytecode bytecode = do
-  let extensionlessFilename = "./cucaTest"
-  let filename = extensionlessFilename ++ ".asm"
-  dir <- getCurrentDirectory
-  outputFile filename (show bytecode)
-  (exit_code, console_out, console_err) <- readProcessWithExitCode "bash" [dir ++ "/cuca", "-r", extensionlessFilename] ""
-  return console_out
-
-pcompiled input = compile (parsed input)
+--------------------------------------------------------------------------------
+--                               HELPERS                                      --
+--------------------------------------------------------------------------------
+pcompiled input = Compiler.compileAndRun (Assembler.assemble (Parser.parsed input)) "./cucaTest"

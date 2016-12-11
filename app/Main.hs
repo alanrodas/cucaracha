@@ -10,12 +10,13 @@ import System.Exit
 import System.IO
 import System.Process
 
-import Lexer
-import Parser
-import Printer
-import TypeChecker
-import Assembler
-import AssemblyPrinter
+import qualified Lexer
+import qualified Parser
+import qualified Printer
+import qualified TypeChecker
+import qualified Assembler
+import qualified AssemblyPrinter
+import qualified Compiler
 
 data Cucaracha = Cucaracha {
                      tokens   :: Bool
@@ -29,7 +30,7 @@ data Cucaracha = Cucaracha {
                  }
               deriving (Show, Data, Typeable)
 
-sample = Cucaracha{
+cucarachaConsole = Cucaracha{
              tokens    = def &= help "Output the tokenization string to the console"
             ,ast       = def &= help "Output the AST string to the console" &= name "a"
             ,check     = def &= help "Output the typechecking status of the code to the console"
@@ -40,17 +41,12 @@ sample = Cucaracha{
             ,out       = def &= help "The output file" &= typ "[output]" &= opt "program"
          }
 
-outputFileToDisk :: String -> String -> IO()
-outputFileToDisk filename datum = do
-  appendFile filename ""
-  writeFile filename datum
-
 main :: IO()
 main = do
-    args <- (cmdArgs $ sample
-                     &= help "The cucaracha sample language parser and compiler"
+    args <- (cmdArgs $ cucarachaConsole
+                     &= help "The cucaracha language parser and compiler"
                      &= program "Cucaracha"
-                     &= summary "Cucaracha v0.1"
+                     &= summary "Cucaracha v1.0.0.0"
             )
     dir <- getCurrentDirectory
     inputFile <- (canonicalizePath (file args))
@@ -62,41 +58,44 @@ main = do
     contents <-readFile inputFile
 
     -- tokenize
-    let tokenized = tokenize contents
+    let tokenized = Lexer.tokenize contents
     -- print results if demanded by the user
     when (tokens args) (putStrLn (show tokenized))
     -- Exit if there are no more stept to perform to increment performance
     when (tokens args && not (ast args) && not (check args) && not (assembly args) && not (compile args || execute args)) (exitSuccess)
 
     -- parse
-    let asted = parse tokenized
+    let asted = Parser.parse tokenized
     -- print results if demanded by the user
     when (ast args) (putStrLn (show asted))
     -- Exit if there are no more stept to perform to increment performance
     when (ast args && not (check args) && not (assembly args) && not (compile args || execute args)) (exitSuccess)
 
     -- typecheck
-    let tc = typechecks asted
+    let tc = TypeChecker.typechecks asted
     -- print results if demanded by the user
     -- also print the result if there are typecheck error prior to exiting
     when (check args && tc) (putStrLn "The program has passed type check validation")
-    when (not tc) (putStrLn ("Compilation error: " ++ (typecheckErrors asted)))
+    when (not tc) (putStrLn ("Compilation error: " ++ (TypeChecker.typecheckErrors asted)))
     -- Exit if there are no more stept to perform to increment performance
     -- Also exit if the program did not typecheck correctly
     when (not tc || (check args && not (assembly args) && not (compile args || execute args))) (exitSuccess)
 
     -- assembly
-    let assembled = assemble asted
+    let assembled = Assembler.assemble asted
     let filename = if  (assembly args && not (compile args || execute args)) then (out args) else (out args) ++ ".asm"
-    outputFileToDisk filename (show assembled)
+    Compiler.saveAssembly filename assembled
     -- Exit if there are no more stept to perform to increment performance
     when (assembly args && not (compile args || execute args)) (exitSuccess)
 
     -- fully compile
-    (exit_code, console_out, console_err) <- readProcessWithExitCode "bash" [dir ++ "/cuca", "-f", filename, "-o", (out args), "-l", filename ++ ".o"] ""
+    compileStatus <- Compiler.compileFile filename (out args)
+    -- Delete intermediate assembly if it was not requested
+    when (not (assembly args)) (Compiler.deleteFile filename)
+
     -- Print compilation message at this point
-    when (exit_code /= ExitSuccess) (putStrLn console_err)
-    when (exit_code == ExitSuccess) (putStrLn "Cucaracha program compiled succesfully")
+    when (compileStatus /= "") (putStrLn compileStatus)
+    when (compileStatus == "") (putStrLn "Cucaracha program compiled succesfully")
 
     -- Exit if there are no more stept to perform to increment performance
     when (not (execute args)) (exitSuccess)
@@ -107,9 +106,8 @@ main = do
     when (execute args) (putStrLn "-------------------------------")
 
     -- execute the program if it was requested so
-    (exit_code2, console_out2, console_err2) <- readProcessWithExitCode "bash" ["exec", (out args)] ""
-    when (exit_code /= ExitSuccess) (putStrLn console_err)
-    when (exit_code == ExitSuccess) (putStrLn console_out2)
+    runResult <- Compiler.run (out args)
+    putStrLn runResult
 
     -- print program execution finished message
     putStrLn "-------------------------------"

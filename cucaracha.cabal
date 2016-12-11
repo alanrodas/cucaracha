@@ -1,5 +1,5 @@
 name:                cucaracha
-version:             0.1.0.0
+version:             1.0.0.0
 synopsis:            A programming language made in Haskell using Alex and Happy
 description:         Please see README.md
 homepage:            https://github.com/alanrodas/cucaracha#readme
@@ -32,7 +32,8 @@ library
                        TypeChecker,
                        Assembler,
                        AssemblerHelper,
-                       AssemblyPrinter
+                       AssemblyPrinter,
+                       Compiler
 
 executable cucaracha-exe
   hs-source-dirs:      app
