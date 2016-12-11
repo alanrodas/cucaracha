@@ -31,6 +31,7 @@ compileFile inputFile outputFile = do
   (exit_code_gcc, console_out_gcc, console_err_gcc) <- readProcessWithExitCode "gcc" ["-o", outputFile, outputFile ++ ".o"] ""
   --(exit_code, console_out, console_err) <- readProcessWithExitCode "bash" [dir ++ "/cuca", inputFile] ""
   --return (if exit_code == ExitSuccess then console_out else console_err)
+  deleteFile (outputFile ++ ".o")
   return (if exit_code_nasm /= ExitSuccess
     then console_err_nasm else if exit_code_gcc /= ExitSuccess
       then console_err_gcc
@@ -60,4 +61,4 @@ run filename = do
 
 deleteFile :: String -> IO ()
 deleteFile filename = do
-  removePathForcibly filename
+  removeFile filename

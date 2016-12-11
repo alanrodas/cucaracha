@@ -31,12 +31,12 @@ data Cucaracha = Cucaracha {
               deriving (Show, Data, Typeable)
 
 cucarachaConsole = Cucaracha{
-             tokens    = def &= help "Output the tokenization string to the console"
-            ,ast       = def &= help "Output the AST string to the console" &= name "a"
+             tokens    = def &= help "Output the tokenization result to the console"
+            ,ast       = def &= help "Output the AST result to the console" &= name "a"
             ,check     = def &= help "Output the typechecking status of the code to the console"
-            ,assembly  = def &= help "Produce only the assembly file but do not compile it" &= name "e"
-            ,compile   = def &= help "Produce the compiled file using GCC" &= name "C"
-            ,execute   = def &= help "Execute the outputed compiled file" &= name "X"
+            ,assembly  = def &= help "Produce the assembly file" &= name "e"
+            ,compile   = def &= help "Produce the compiled file" &= name "C"
+            ,execute   = def &= help "Execute the program" &= name "X"
             ,file      = def &= help "The input file" &= typ "[input]" &= opt "program.cuca"
             ,out       = def &= help "The output file" &= typ "[output]" &= opt "program"
          }
@@ -113,3 +113,6 @@ main = do
     putStrLn "-------------------------------"
     putStrLn ""
     putStrLn "Cucaracha execution finished"
+
+    -- Delete intermediate compiled file if it was not requested
+    when (not (compile args)) (Compiler.deleteFile (out args))
