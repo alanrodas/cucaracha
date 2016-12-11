@@ -129,13 +129,13 @@ type Id = String
 
 data Type = Int | Bool | Vec | Unit deriving (Enum, Bounded, Eq, Show)
 
-data ProgramT = EmptyProgram | Program [FunctionT]
+data ProgramT = EmptyProgram | Program [FunctionT] deriving Eq
 
-data FunctionT = Function Id Type [ParameterT] BlockT deriving Show
+data FunctionT = Function Id Type [ParameterT] BlockT deriving (Eq, Show)
 
-data ParameterT = Parameter Id Type deriving Show
+data ParameterT = Parameter Id Type deriving (Eq, Show)
 
-data BlockT = Block [StmtT] deriving Show
+data BlockT = Block [StmtT] deriving (Eq, Show)
 
 data StmtT = StmtAssign Id ExprT
         | StmtVecAssign Id ExprT ExprT
@@ -144,7 +144,7 @@ data StmtT = StmtAssign Id ExprT
         | StmtWhile ExprT BlockT
         | StmtReturn ExprT
         | StmtCall Id [ExprT]
-        deriving Show
+        deriving (Eq, Show)
 
 data ExprT = ExprVar Id
         | ExprConstNum Int
@@ -165,5 +165,5 @@ data ExprT = ExprVar Id
         | ExprAdd ExprT ExprT
         | ExprSub ExprT ExprT
         | ExprMul ExprT ExprT
-        deriving Show
+        deriving (Eq, Show)
 }

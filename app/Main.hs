@@ -14,8 +14,8 @@ import Lexer
 import Parser
 import Printer
 import TypeChecker
-import Precompiler
-import PrecompilerPrinter
+import Assembler
+import AssemblyPrinter
 
 data Cucaracha = Cucaracha {
                      tokens   :: Bool
@@ -86,7 +86,7 @@ main = do
     when (not tc || (check args && not (assembly args) && not (compile args || execute args))) (exitSuccess)
 
     -- assembly
-    let assembled = precompile asted
+    let assembled = assemble asted
     let filename = if  (assembly args && not (compile args || execute args)) then (out args) else (out args) ++ ".asm"
     outputFileToDisk filename (show assembled)
     -- Exit if there are no more stept to perform to increment performance

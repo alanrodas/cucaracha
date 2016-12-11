@@ -1,8 +1,8 @@
-module PrecompilerPrinter(
+module AssemblyPrinter(
   OutputAssembly(..),
   showBytecode
 ) where
-import Precompiler
+import Assembler
 import Text.PrettyPrint
 
 --------------------------------------------------------------------------------
@@ -53,29 +53,41 @@ prelude style = text "section .data" $$
                             text (printfFunction style) $$
           emptyLine
 
-function name contents = text (name ++ ":") $$ (nest idnt contents)
+function name contents = text name <> colon $$ (nest idnt contents)
 
-programRepr style BytecodeEmptyProgram = function (mainFunction style) (stmtsRepr style [Mov Rdi 0, CCall CCExit])
+programRepr style BytecodeEmptyProgram = function (mainFunction style) (stmtsRepr style [Mov Rdi $ Const 0, CCall CCExit])
 programRepr style (BytecodeProgram funcs) =
   listRepr style funcRepr funcs $$
-  function (mainFunction style) (stmtsRepr style [Call "main", Mov Rdi 0, CCall CCExit])
+  function (mainFunction style) (stmtsRepr style [Call "cuca_main", Mov Rdi $ Const 0, CCall CCExit])
 
 funcRepr style (BFunc name stmts) = function name (stmtsRepr style stmts $$ emptyLine)
 
 stmtsRepr style stmts = listRepr style stmtRepr stmts
 
-stmtRepr style (Mov reg n) = text "mov" <+> regRepr style reg <> comma <+> text (show n)
-stmtRepr style (Movr reg reg2) = text "mov" <+> regRepr style reg <> comma <+> regRepr style reg2
-stmtRepr style (Movtm mem reg) = text "mov" <+> memRepr style mem <> comma <+> regRepr style reg
-stmtRepr style (Movfm reg mem) = text "mov" <+> regRepr style reg <> comma <+> memRepr style mem
+stmtRepr style (Comment comment) = semi <+> text comment
+stmtRepr style (Commented comment stmt) = stmtRepr style stmt <+> semi <+> text comment
+stmtRepr style (EmptyLine) = emptyLine
+stmtRepr style (Label name) = text name <> colon
 stmtRepr style (CCall prim) = text "call" <+> primRepr style prim
-stmtRepr style (Call name) = text "call" <+> text "cuca_" <> text name
-stmtRepr style (Push n) = text "push" <+> text (show n)
-stmtRepr style (Pushr reg) =  text "push" <+> regRepr style reg
-stmtRepr style (Popr reg) =  text "pop" <+> regRepr style reg
-stmtRepr style (Sub reg n) =  text "sub" <+> regRepr style reg <> comma <+> text (show n)
-stmtRepr style (Add reg n) =  text "add" <+> regRepr style reg <> comma <+> text (show n)
+stmtRepr style (Call name) = text "call" <+> text name
 stmtRepr style (Ret) = text "ret"
+stmtRepr style (Push reg) = unaryRegistryOp style "push" reg
+stmtRepr style (Pop reg) =  unaryRegistryOp style "pop" reg
+stmtRepr style (Mov reg1 reg2) = binaryRegistryOp style "mov" reg1 reg2
+stmtRepr style (Add reg1 reg2) = binaryRegistryOp style "add" reg1 reg2
+stmtRepr style (Sub reg1 reg2) = binaryRegistryOp style "sub" reg1 reg2
+stmtRepr style (Mul reg) = unaryRegistryOp style "imul" reg
+stmtRepr style (And reg1 reg2) = binaryRegistryOp style "and" reg1 reg2
+stmtRepr style (Or reg1 reg2) = binaryRegistryOp style "or" reg1 reg2
+stmtRepr style (Not reg) = unaryRegistryOp style "not" reg
+stmtRepr style (Cmp reg1 reg2) = binaryRegistryOp style "cmp" reg1 reg2
+stmtRepr style (Jmp name) = text "jmp" <+> text name
+stmtRepr style (Je name) = text "je" <+> text name
+stmtRepr style (Jne name) = text "jne" <+> text name
+stmtRepr style (Jle name) = text "jle" <+> text name
+stmtRepr style (Jge name) = text "jge" <+> text name
+stmtRepr style (Jl name) = text "jl" <+> text name
+stmtRepr style (Jg name) = text "jg" <+> text name
 
 regRepr style LLIString = text "lli_format_string"
 regRepr style Rdi = text "rdi"
@@ -94,11 +106,12 @@ regRepr style R14 = text "r14"
 regRepr style R15 = text "r15"
 regRepr style Rbp = text "rbp"
 regRepr style Rsp = text "rsp"
-
-memRepr style (Mem r op n) = text "[" <> regRepr style r <+> text op <+> text (show n) <> text "]"
-memRepr style (Memr r) = text "[" <> regRepr style r <> text "]"
-
+regRepr style (Mem r op n) = text "[" <> regRepr style r <+> text op <+> text (show n) <> text "]"
+regRepr style (Const n) = text (show n)
 
 primRepr style CCExit = text (exitFunction style)
 primRepr style CCPutChar = text (putcharFunction style)
 primRepr style CCPrintf = text (printfFunction style)
+
+unaryRegistryOp style name reg = text name <+> regRepr style reg
+binaryRegistryOp style name reg1 reg2 = text name <+> regRepr style reg1 <> comma <+> regRepr style reg2

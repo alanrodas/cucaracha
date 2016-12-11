@@ -9,21 +9,24 @@ import Text.PrettyPrint
 --------------------------------------------------------------------------------
 
 instance Show ProgramT where
-  show p = render ((programRepr p) $$ text "")
+  show p = render $ (programRepr idnt p) $$ text ""
 
-programRepr EmptyProgram = programRepr (Program [])
-programRepr (Program funcs) =
-  parentesis (
+programRepr n EmptyProgram = programRepr n $ Program []
+programRepr n (Program funcs) =
+  parenthesis (
     text      "Program"           $$
-    listRepr  funcRepr funcs idnt
+    listRepr  funcRepr funcs n
   )
-
 --------------------------------------------------------------------------------
---                              INTERNAL                                      --
+--                              CONSTANTS                                     --
 --------------------------------------------------------------------------------
 
 idnt :: Int
 idnt = 1
+
+--------------------------------------------------------------------------------
+--                              INTERNAL                                      --
+--------------------------------------------------------------------------------
 
 funcRepr (Function name typ params block) n =
   nestify n "Function" [nested name, typeRepr typ, listRepr paramRepr params, blockRepr block]
@@ -91,21 +94,25 @@ exprRepr (ExprMul exprL exprR) n =
   nestify n "ExprMul" [exprRepr exprL, exprRepr exprR]
 
 
+--------------------------------------------------------------------------------
+--                               HELPERS                                      --
+--------------------------------------------------------------------------------
+
 nested :: String -> Int -> Doc
 -- Return a doc of the given string nested a given amount of places to the right
-nested str n = nest n (text str)
+nested str n = nest n $ text str
 
-parentesis :: Doc -> Doc
+parenthesis :: Doc -> Doc
 -- Return the document wrapped in parentesis with the expected newlines added
-parentesis x = lparen <> x $$ rparen
+parenthesis x = lparen <> x $$ rparen
 
 nestedParens :: Int -> Doc -> Doc
 -- Return the document indented by a given space and wrapped around the expected parens
-nestedParens n x = nest n (parentesis x)
+nestedParens n x = nest n $ parenthesis x
 
 listRepr :: (a -> Int -> Doc) -> [a] -> Int ->  Doc
 -- Get the doc representation of a list of elements of any type
 listRepr f ls n = foldl ($$) empty (map (\x -> f x n) ls)
 
 nestify :: Int -> String -> [(Int -> Doc)] -> Doc
-nestify n name elems = nestedParens n (foldl (\a e -> a $$ (e n) ) (text name) elems)
+nestify n name elems = nestedParens n $ foldl (\a e -> a $$ (e n) ) (text name) elems

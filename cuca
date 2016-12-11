@@ -54,7 +54,7 @@ if [ -f $objectfile ]; then rm $objectfile;  fi
 if [ -f $output ]; then rm $output; fi
 
 # Perform linking with NASM. Fail in case of errors
-nasm -felf64 -o $objectfile $filename;
+nasm -g -felf64 -o $objectfile $filename;
 if ! [ -f $objectfile ]; then exit 1; fi
 
 # Perform compilation with C. Fail in case of errors

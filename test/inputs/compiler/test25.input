@@ -10,6 +10,7 @@ fun main() {
     if True {
         putChar(65)
     }
+
     if False {
         putChar(66)
     }

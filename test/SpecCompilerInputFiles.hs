@@ -75,7 +75,7 @@ test = hspec $ do
       expected <- readFile "test/inputs/compiler/test09.expected"
       compiled <- pcompiled input
       compiled `shouldBe` expected
-{-
+
     it "10 - many local variables usage" $ do
       input <- readFile "test/inputs/compiler/test10.input"
       expected <- readFile "test/inputs/compiler/test10.expected"
@@ -129,7 +129,6 @@ test = hspec $ do
       expected <- readFile "test/inputs/compiler/test18.expected"
       compiled <- pcompiled input
       compiled `shouldBe` expected
-
 
     it "19 - perform subtraction with constants and variables" $ do
       input <- readFile "test/inputs/compiler/test19.input"
@@ -217,7 +216,7 @@ test = hspec $ do
 
     it "33 - Less or equal" $ do
       input <- readFile "test/inputs/compiler/test33.input"
-      expected <- readFile "test/inputs/compiler/test3.expected"
+      expected <- readFile "test/inputs/compiler/test33.expected"
       compiled <- pcompiled input
       compiled `shouldBe` expected
 
@@ -322,7 +321,7 @@ test = hspec $ do
       expected <- readFile "test/inputs/compiler/test50.expected"
       compiled <- pcompiled input
       compiled `shouldBe` expected
-
+{-
       it "51 - Vector creations and length testing" $ do
       input <- readFile "test/inputs/compiler/test51.input"
       expected <- readFile "test/inputs/compiler/test51.expected"

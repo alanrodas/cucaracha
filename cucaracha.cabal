@@ -15,25 +15,48 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  build-depends:       base >= 4.7 && < 5, array, pretty, mtl, process, directory, containers
+  build-depends:       base >= 4.7 && < 5,
+                       array,
+                       pretty,
+                       mtl,
+                       process,
+                       directory
+                       --containers
   build-tools:         alex, happy
   default-language:    Haskell2010
-  ghc-options:         -threaded -XFlexibleContexts
-  exposed-modules:     Lexer, Parser, Printer, TypeChecker, Precompiler, PrecompilerPrinter
+  ghc-options:         -threaded
+  default-extensions:  FlexibleContexts
+  exposed-modules:     Lexer,
+                       Parser,
+                       Printer,
+                       TypeChecker,
+                       Assembler,
+                       AssemblerHelper,
+                       AssemblyPrinter
 
 executable cucaracha-exe
   hs-source-dirs:      app
   main-is:             Main.hs
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
-  build-depends:       base >= 4.7 && < 5, cucaracha, cmdargs, process, directory
+  build-depends:       base >= 4.7 && < 5,
+                       cucaracha,
+                       cmdargs,
+                       process,
+                       directory
   default-language:    Haskell2010
 
 test-suite cucaracha-test
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Spec.hs
-  other-modules:       SpecParserInputFiles, SpecTypeChecker, SpecCompilerInputFiles
-  build-depends:       base, cucaracha, hspec, process, directory
+  other-modules:       SpecParserInputFiles,
+                       SpecTypeChecker,
+                       SpecCompilerInputFiles
+  build-depends:       base,
+                       cucaracha,
+                       hspec,
+                       process,
+                       directory
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 
